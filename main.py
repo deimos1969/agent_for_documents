@@ -15,7 +15,7 @@ HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
 
 # ✅ NEW MODEL: 'flan-t5' is gone. We use SmolLM2 (fast, free, supported).
 # Other options: "meta-llama/Llama-3.2-3B-Instruct" (if you have access) or "mistralai/Mistral-7B-Instruct-v0.3"
-HF_MODEL_ID = "microsoft/Phi-3.5-mini-instruct"
+HF_MODEL_ID = "meta-llama/Meta-Llama-3-8B-Instruct"
 
 HF_API_KEY = os.environ.get("HF_API_KEY")
 DATA_FOLDER = "knowledge_base"
