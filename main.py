@@ -10,15 +10,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = FastAPI()
 
 # --- CONFIGURATION ---
-# ✅ NEW URL: The universal "Chat Completions" endpoint for the Router
 HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
-
-# ✅ NEW MODEL: 'flan-t5' is gone. We use SmolLM2 (fast, free, supported).
-# Other options: "meta-llama/Llama-3.2-3B-Instruct" (if you have access) or "mistralai/Mistral-7B-Instruct-v0.3"
 HF_MODEL_ID = "meta-llama/Meta-Llama-3-8B-Instruct"
-
 HF_API_KEY = os.environ.get("HF_API_KEY")
-DATA_FOLDER = "knowledge_base"
+
+# ✅ FIX: Use absolute paths. 
+# This ensures Render finds the folder regardless of where the script runs from.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_FOLDER = os.path.join(BASE_DIR, "knowledge_base")
 
 # --- GLOBAL VARIABLES ---
 vectorizer = None
@@ -28,11 +27,19 @@ doc_filenames = []
 
 def load_knowledge_base():
     global vectorizer, tfidf_matrix, documents, doc_filenames
-    print(f"Reading '{DATA_FOLDER}'...")
+    
+    # ✅ DEBUG LOGGING: This will show up in your Render dashboard logs
+    print(f"--- LOADING KNOWLEDGE BASE ---")
+    print(f"Base Directory: {BASE_DIR}")
+    print(f"Target Data Folder: {DATA_FOLDER}")
+    
     documents = []
     doc_filenames = []
     
     if os.path.exists(DATA_FOLDER):
+        # List all files in the directory to verify existence
+        print(f"Files found in folder: {os.listdir(DATA_FOLDER)}")
+        
         file_paths = glob.glob(os.path.join(DATA_FOLDER, "*.txt"))
         for file_path in file_paths:
             try:
@@ -41,10 +48,14 @@ def load_knowledge_base():
                     if text.strip():
                         documents.append(text)
                         doc_filenames.append(os.path.basename(file_path))
+                        print(f" -> Loaded: {os.path.basename(file_path)}")
             except Exception as e:
-                print(f"Skipping file {file_path}: {e}")
+                print(f" -> Error reading {file_path}: {e}")
+    else:
+        print(f"⚠️ CRITICAL: Folder not found at {DATA_FOLDER}")
     
     if not documents:
+        print("⚠️ No documents found. Initializing empty state.")
         documents = ["No specific data available."]
         doc_filenames = ["none"]
 
@@ -54,11 +65,12 @@ def load_knowledge_base():
         tfidf_matrix = vectorizer.fit_transform(documents)
         print("--- ✅ KNOWLEDGE BASE READY ---")
     except ValueError:
-        print("--- ⚠️ KNOWLEDGE BASE EMPTY ---")
+        print("--- ⚠️ KNOWLEDGE BASE EMPTY (Vectorizer failed) ---")
 
+# Initialize on startup
 load_knowledge_base()
 
-# --- API HELPER (Updated for Router) ---
+# --- API HELPER ---
 def query_huggingface_router(prompt):
     if not HF_API_KEY:
         return "Error: HF_API_KEY is missing."
@@ -68,7 +80,6 @@ def query_huggingface_router(prompt):
         "Content-Type": "application/json"
     }
 
-    # ✅ NEW PAYLOAD FORMAT: OpenAI-compatible "messages"
     payload = {
         "model": HF_MODEL_ID,
         "messages": [
@@ -87,7 +98,6 @@ def query_huggingface_router(prompt):
 
         result = response.json()
         
-        # Parse OpenAI-style response
         if "choices" in result and len(result["choices"]) > 0:
             return result["choices"][0]["message"]["content"]
         else:
@@ -120,16 +130,17 @@ async def ask_agent(request: QueryRequest):
             
             retrieved_docs = []
             for i in related_docs_indices:
+                # Only include if there is actual similarity
                 if similarities[i] > 0:
                     retrieved_docs.append(documents[i])
                     sources.append(doc_filenames[i])
             
             if retrieved_docs:
                 context_text = "\n\n".join(retrieved_docs)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Retrieval error: {e}")
 
-    # 2. Construct Prompt (Chat Style)
+    # 2. Construct Prompt
     prompt = f"""
     You are a helpful assistant. Answer the question based ONLY on the context below.
     
@@ -140,7 +151,7 @@ async def ask_agent(request: QueryRequest):
     {query}
     """
     
-    print(f"Asking AI ({HF_MODEL_ID})...")
+    print(f"Asking AI ({HF_MODEL_ID})... Sources: {sources}")
     
     # 3. Call API
     answer = query_huggingface_router(prompt)
