@@ -10,9 +10,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = FastAPI()
 
 # --- CONFIGURATION ---
-# NOTE: The standard public API endpoint is 'api-inference.huggingface.co'.
-# If 'router.huggingface.co' was giving you trouble, this is the safer bet for raw requests.
-HF_MODEL_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+# ✅ UPDATED: Points to the new Router API
+HF_MODEL_URL = "https://router.huggingface.co/hf-inference/models/google/flan-t5-large"
 
 # Securely get key from Render Environment
 HF_API_KEY = os.environ.get("HF_API_KEY")
@@ -53,18 +52,20 @@ def load_knowledge_base():
         documents = ["No specific data available."]
         doc_filenames = ["none"]
 
-    # Build Search Index (TF-IDF) - Ultra fast, low RAM
+    # Build Search Index (TF-IDF)
     print("Building Search Index...")
-    vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(documents)
-    print("--- ✅ KNOWLEDGE BASE READY ---")
+    try:
+        vectorizer = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform(documents)
+        print("--- ✅ KNOWLEDGE BASE READY ---")
+    except ValueError:
+        print("--- ⚠️ KNOWLEDGE BASE EMPTY (No valid words found) ---")
 
 # Load data on startup
 load_knowledge_base()
 
-# --- API HELPER (FIXED) ---
+# --- API HELPER ---
 def query_huggingface_api(payload):
-    # Safety Check
     if not HF_API_KEY:
         return {"error": "HF_API_KEY is missing. Please set it in Render Environment Variables."}
 
@@ -73,26 +74,24 @@ def query_huggingface_api(payload):
     try:
         response = requests.post(HF_MODEL_URL, headers=headers, json=payload)
         
-        # 1. DEBUGGING: Print status if it fails
+        # DEBUG: Print exact error if it fails
         if response.status_code != 200:
-            print(f"⚠️ HF API Error {response.status_code}: {response.text}")
+            print(f"⚠️ API Error {response.status_code}: {response.text}")
 
-        # 2. SAFE PARSING: Don't crash if it's not JSON
-        try:
-            return response.json()
-        except json.JSONDecodeError:
-            return {
-                "error": f"API returned invalid JSON. Status: {response.status_code}", 
-                "raw_content": response.text
-            }
+        return response.json()
             
+    except json.JSONDecodeError:
+        return {
+            "error": f"API returned invalid JSON. Status: {response.status_code}", 
+            "raw_content": response.text
+        }
     except requests.exceptions.RequestException as e:
         return {"error": f"Network Request Failed: {str(e)}"}
 
 # --- ROUTES ---
 @app.get("/")
 def health_check():
-    return {"status": "Agent is running", "mode": "HF API (Standard)"}
+    return {"status": "Agent is running", "mode": "HF Router API"}
 
 class QueryRequest(BaseModel):
     question: str
@@ -102,36 +101,32 @@ async def ask_agent(request: QueryRequest):
     query = request.question
     
     # Step 1: Retrieve relevant context locally
-    try:
-        query_vec = vectorizer.transform([query])
-        similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
-        
-        # Get top 2 most similar documents
-        related_docs_indices = similarities.argsort()[:-3:-1]
-        
-        retrieved_docs = []
-        sources = []
-        
-        for i in related_docs_indices:
-            if similarities[i] > 0: # Only if it actually matches
-                retrieved_docs.append(documents[i])
-                sources.append(doc_filenames[i])
-                
-        context_text = "\n\n".join(retrieved_docs)
-        if not retrieved_docs:
-            context_text = "No specific context found in documents."
+    context_text = "No context found."
+    sources = []
+    
+    if vectorizer and tfidf_matrix is not None:
+        try:
+            query_vec = vectorizer.transform([query])
+            similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
+            related_docs_indices = similarities.argsort()[:-3:-1]
             
-    except Exception as e:
-        print(f"Vector search error: {e}")
-        context_text = "Error retrieving context."
-        sources = []
+            retrieved_docs = []
+            for i in related_docs_indices:
+                if similarities[i] > 0:
+                    retrieved_docs.append(documents[i])
+                    sources.append(doc_filenames[i])
+            
+            if retrieved_docs:
+                context_text = "\n\n".join(retrieved_docs)
+        except Exception as e:
+            print(f"Retrieval Error: {e}")
 
-    # Step 2: Send to Hugging Face API for the answer
-    input_text = f"question: {query} context: {context_text}"
+    # Step 2: Send to Hugging Face API
+    # Note: 'flan-t5' is a text-2-text model, so we format the input as a prompt.
+    input_text = f"Answer the question based on the context.\nContext: {context_text}\nQuestion: {query}"
     
     print(f"Asking AI... (Context length: {len(context_text)})")
     
-    # Call the robust API helper
     api_response = query_huggingface_api({
         "inputs": input_text,
         "parameters": {
@@ -140,18 +135,15 @@ async def ask_agent(request: QueryRequest):
         }
     })
     
-    # Step 3: Handle the answer parsing
+    # Step 3: Parse Answer
     answer = "Error generating answer."
     
-    if isinstance(api_response, list) and len(api_response) > 0 and "generated_text" in api_response[0]:
-        answer = api_response[0]["generated_text"]
+    if isinstance(api_response, list) and len(api_response) > 0:
+        if "generated_text" in api_response[0]:
+            answer = api_response[0]["generated_text"]
     elif isinstance(api_response, dict):
         if "error" in api_response:
-            # Check if model is loading (Common HF issue)
-            if "estimated_time" in api_response:
-                answer = f"Model is loading... please try again in {int(api_response['estimated_time'])} seconds."
-            else:
-                answer = f"API Error: {api_response['error']} (Raw: {api_response.get('raw_content', '')})"
+             answer = f"API Error: {api_response['error']}"
         elif "generated_text" in api_response:
             answer = api_response["generated_text"]
     
