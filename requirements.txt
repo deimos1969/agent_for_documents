@@ -1,15 +1,7 @@
 fastapi
 uvicorn
-numpy<2.0.0
-
-# Lightweight Machine Learning
+# Lightweight math for finding relevant text
 scikit-learn
-
-# The Generator Model
-transformers[sentencepiece]
-sentencepiece
-protobuf
-
-# PyTorch CPU
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
+numpy
+# For talking to the Hugging Face API
+requests

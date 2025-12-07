@@ -1,45 +1,38 @@
 import os
 import glob
+import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
 # --- CONFIGURATION ---
-MODEL_NAME = "google/flan-t5-small"
+HF_MODEL_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+
+# SECURE FIX: Get the key from the environment, do NOT hardcode it.
+HF_API_KEY = os.environ.get("HF_API_KEY")
+
 DATA_FOLDER = "knowledge_base"
 
 # --- GLOBAL VARIABLES ---
 vectorizer = None
 tfidf_matrix = None
-tokenizer = None
-model = None
 documents = []
 doc_filenames = []
 
-def load_models_if_needed():
-    global vectorizer, tfidf_matrix, tokenizer, model, documents, doc_filenames
+def load_knowledge_base():
+    """
+    Loads text files and builds a light search index.
+    """
+    global vectorizer, tfidf_matrix, documents, doc_filenames
     
-    if model is not None:
-        return
-
-    print("--- 🐢 LAZY LOADING: Ultra-Lite Mode ---")
-    
-    try:
-        import torch
-        from transformers import T5Tokenizer, T5ForConditionalGeneration
-        # We use Scikit-Learn instead of Neural Embeddings to save RAM
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        from sklearn.metrics.pairwise import cosine_similarity
-        import numpy as np
-    except ImportError as e:
-        raise HTTPException(status_code=500, detail=f"Missing lib: {e}")
-
-    # 1. Load Documents
     print(f"Reading '{DATA_FOLDER}'...")
     documents = []
     doc_filenames = []
     
+    # Check if folder exists
     if os.path.exists(DATA_FOLDER):
         file_paths = glob.glob(os.path.join(DATA_FOLDER, "*.txt"))
         for file_path in file_paths:
@@ -53,72 +46,81 @@ def load_models_if_needed():
         documents = ["No data found."]
         doc_filenames = ["none"]
 
-    # 2. Build Search Index (TF-IDF) - Uses almost 0 RAM
+    # Build Search Index (TF-IDF) - Ultra fast, low RAM
     print("Building Search Index...")
     vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_matrix = vectorizer.fit_transform(documents)
+    print("--- ✅ KNOWLEDGE BASE READY ---")
 
-    # 3. Load T5 Model (The only heavy part left)
-    print("Loading T5 Model...")
-    tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, legacy=False)
-    model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME)
-    
-    print("--- ✅ SYSTEM READY ---")
+# Load data on startup
+load_knowledge_base()
 
-# --- API ---
+# --- API HELPER ---
+def query_huggingface_api(payload):
+    # Safety Check
+    if not HF_API_KEY:
+        return {"error": "HF_API_KEY is missing. Please set it in Render Environment Variables."}
 
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    response = requests.post(HF_MODEL_URL, headers=headers, json=payload)
+    return response.json()
+
+# --- ROUTES ---
 @app.get("/")
 def health_check():
-    return {"status": "Agent is running", "mode": "Ultra-Lite"}
+    return {"status": "Agent is running", "mode": "HF API (Cloud Inference)"}
 
 class QueryRequest(BaseModel):
     question: str
 
 @app.post("/ask")
 async def ask_agent(request: QueryRequest):
-    load_models_if_needed()
-    
-    # Need to import these locally to use them
-    from sklearn.metrics.pairwise import cosine_similarity
-    
     query = request.question
     
-    # Step A: Retrieve (TF-IDF)
-    # Transform query to vector
+    # Step 1: Retrieve relevant context locally
     query_vec = vectorizer.transform([query])
-    # Calculate similarity
     similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
     
-    # Get top 2 results
-    # We use argsort to get indices of highest scores
+    # Get top 2 most similar documents
     related_docs_indices = similarities.argsort()[:-3:-1]
     
     retrieved_docs = []
     sources = []
     
     for i in related_docs_indices:
-        # Only include if similarity is > 0
-        if similarities[i] > 0:
+        if similarities[i] > 0: # Only if it actually matches
             retrieved_docs.append(documents[i])
             sources.append(doc_filenames[i])
             
-    if not retrieved_docs:
-        return {"question": query, "answer": "I couldn't find relevant info in the documents.", "sources": []}
-
     context_text = "\n\n".join(retrieved_docs)
     
-    # Step B: Generate (T5)
+    if not retrieved_docs:
+        context_text = "No specific context found."
+
+    # Step 2: Send to Hugging Face API for the answer
     input_text = f"question: {query} context: {context_text}"
-    input_ids = tokenizer(input_text, return_tensors="pt").input_ids
     
-    outputs = model.generate(
-        input_ids,
-        max_length=150,
-        num_beams=2,
-        early_stopping=True
-    )
+    print(f"Asking AI... (Context length: {len(context_text)})")
     
-    answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    try:
+        api_response = query_huggingface_api({
+            "inputs": input_text,
+            "parameters": {
+                "max_length": 150, 
+                "temperature": 0.1 
+            }
+        })
+        
+        # Handle API response structure
+        if isinstance(api_response, list) and "generated_text" in api_response[0]:
+            answer = api_response[0]["generated_text"]
+        elif isinstance(api_response, dict) and "error" in api_response:
+             answer = f"System Message: {api_response['error']}"
+        else:
+            answer = str(api_response)
+
+    except Exception as e:
+        answer = f"Connection Error: {str(e)}"
     
     return {
         "question": query,
