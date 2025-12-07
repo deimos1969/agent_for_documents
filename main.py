@@ -3,11 +3,22 @@ import glob
 import requests
 import json
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
+
+# --- CORS SETTINGS (Crucial for WordPress) ---
+# This allows your website to send requests to this API.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace "*" with your actual domain (e.g., ["https://my-blog.com"])
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- CONFIGURATION ---
 HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
@@ -39,15 +50,12 @@ def load_knowledge_base():
                 with open(file_path, "r", encoding="utf-8") as f:
                     full_text = f.read()
                     
-                    # --- IMPROVEMENT 1: CHUNKING ---
-                    # Split the file by double newlines into smaller "chunks"
-                    # This works perfectly with your formatting style
+                    # --- CHUNKING LOGIC ---
+                    # Split files by double newlines so the AI gets specific sections
                     chunks = full_text.split("\n\n")
                     
                     for chunk in chunks:
                         if chunk.strip():
-                            # We prepend the filename so the AI knows where this chunk came from
-                            # even if we only retrieve this one paragraph.
                             labeled_chunk = f"Source: {filename}\nContent: {chunk.strip()}"
                             documents.append(labeled_chunk)
                             doc_filenames.append(filename)
@@ -125,27 +133,25 @@ async def ask_agent(request: QueryRequest):
             query_vec = vectorizer.transform([query])
             similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
             
-            # Get top 3 most relevant CHUNKS (paragraphs)
+            # Get top 3 most relevant CHUNKS
             related_docs_indices = similarities.argsort()[:-4:-1]
             
             for i in related_docs_indices:
                 if similarities[i] > 0:
                     context_text += documents[i] + "\n---\n"
-                    # Avoid duplicate filenames in the source list
                     if doc_filenames[i] not in sources:
                         sources.append(doc_filenames[i])
             
-            # Fallback if no keywords matched
+            # Fallback if no keywords matched (e.g., generic questions)
             if not context_text and documents:
-                # Just take the first 3 chunks of the first file as a guess
                 context_text = "\n\n".join(documents[:3])
                 sources.append(doc_filenames[0])
                 
         except Exception as e:
             print(f"Retrieval error: {e}")
 
-    # --- IMPROVEMENT 2: SAFETY LIMIT ---
-    # Truncate context if it's too long (avoids API errors)
+    # --- SAFETY LIMIT ---
+    # Truncate to 2500 chars to prevent API errors
     if len(context_text) > 2500:
         context_text = context_text[:2500] + "...(truncated)"
 
