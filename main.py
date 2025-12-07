@@ -21,30 +21,38 @@ DATA_FOLDER = os.path.join(BASE_DIR, "knowledge_base")
 # --- GLOBAL VARIABLES ---
 vectorizer = None
 tfidf_matrix = None
-documents = []
-doc_filenames = []
+documents = []      # Holds the actual text chunks
+doc_filenames = []  # Holds the source filename for each chunk
 
 def load_knowledge_base():
     global vectorizer, tfidf_matrix, documents, doc_filenames
     
     print(f"--- LOADING KNOWLEDGE BASE ---")
-    print(f"Base Directory: {BASE_DIR}")
-    print(f"Target Data Folder: {DATA_FOLDER}")
-    
     documents = []
     doc_filenames = []
     
     if os.path.exists(DATA_FOLDER):
-        print(f"Files found in folder: {os.listdir(DATA_FOLDER)}")
         file_paths = glob.glob(os.path.join(DATA_FOLDER, "*.txt"))
         for file_path in file_paths:
             try:
+                filename = os.path.basename(file_path)
                 with open(file_path, "r", encoding="utf-8") as f:
-                    text = f.read()
-                    if text.strip():
-                        documents.append(text)
-                        doc_filenames.append(os.path.basename(file_path))
-                        print(f" -> Loaded: {os.path.basename(file_path)}")
+                    full_text = f.read()
+                    
+                    # --- IMPROVEMENT 1: CHUNKING ---
+                    # Split the file by double newlines into smaller "chunks"
+                    # This works perfectly with your formatting style
+                    chunks = full_text.split("\n\n")
+                    
+                    for chunk in chunks:
+                        if chunk.strip():
+                            # We prepend the filename so the AI knows where this chunk came from
+                            # even if we only retrieve this one paragraph.
+                            labeled_chunk = f"Source: {filename}\nContent: {chunk.strip()}"
+                            documents.append(labeled_chunk)
+                            doc_filenames.append(filename)
+                            
+                print(f" -> Loaded & Chunked: {filename}")
             except Exception as e:
                 print(f" -> Error reading {file_path}: {e}")
     else:
@@ -53,9 +61,9 @@ def load_knowledge_base():
     if not documents:
         print("⚠️ No documents found. Initializing empty state.")
     else:
+        print(f"Total searchable chunks: {len(documents)}")
         print("Building Search Index...")
         try:
-            # We keep stop_words='english' for better search on specific terms
             vectorizer = TfidfVectorizer(stop_words='english')
             tfidf_matrix = vectorizer.fit_transform(documents)
             print("--- ✅ KNOWLEDGE BASE READY ---")
@@ -86,17 +94,14 @@ def query_huggingface_router(prompt):
     
     try:
         response = requests.post(HF_ROUTER_URL, headers=headers, json=payload)
-        
         if response.status_code != 200:
-            print(f"⚠️ Router Error {response.status_code}: {response.text}")
-            return f"API Error {response.status_code}: {response.text}"
-
+            return f"API Error {response.status_code}"
+        
         result = response.json()
         if "choices" in result and len(result["choices"]) > 0:
             return result["choices"][0]["message"]["content"]
         else:
-            return f"Unexpected format: {result}"
-            
+            return "Unexpected format."
     except Exception as e:
         return f"Connection Error: {str(e)}"
 
@@ -119,33 +124,39 @@ async def ask_agent(request: QueryRequest):
         try:
             query_vec = vectorizer.transform([query])
             similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
-            related_docs_indices = similarities.argsort()[:-3:-1]
             
-            # Try to find high-quality matches first
+            # Get top 3 most relevant CHUNKS (paragraphs)
+            related_docs_indices = similarities.argsort()[:-4:-1]
+            
             for i in related_docs_indices:
                 if similarities[i] > 0:
-                    context_text += documents[i] + "\n\n"
-                    sources.append(doc_filenames[i])
+                    context_text += documents[i] + "\n---\n"
+                    # Avoid duplicate filenames in the source list
+                    if doc_filenames[i] not in sources:
+                        sources.append(doc_filenames[i])
             
-            # --- FALLBACK MECHANISM (Solution 2) ---
-            # If the search returned NOTHING (e.g., query was "Summarize this"),
-            # but we actually have documents, force feed them to the AI.
+            # Fallback if no keywords matched
             if not context_text and documents:
-                print(f"⚠️ Search score was 0. Fallback: Sending all {len(documents)} docs to context.")
-                context_text = "\n\n".join(documents)
-                sources = doc_filenames
+                # Just take the first 3 chunks of the first file as a guess
+                context_text = "\n\n".join(documents[:3])
+                sources.append(doc_filenames[0])
                 
         except Exception as e:
             print(f"Retrieval error: {e}")
 
-    # Handle case where still no context exists (e.g. no files loaded at all)
+    # --- IMPROVEMENT 2: SAFETY LIMIT ---
+    # Truncate context if it's too long (avoids API errors)
+    if len(context_text) > 2500:
+        context_text = context_text[:2500] + "...(truncated)"
+
     if not context_text:
-        context_text = "No documents found in knowledge base."
+        context_text = "No documents found."
 
     # 2. Construct Prompt
     prompt = f"""
-    You are a helpful assistant. Answer the question based ONLY on the context below.
-    If the context is empty, say you don't know.
+    You are an expert Swiss Insurance assistant. 
+    Answer the question based ONLY on the context below.
+    Mention the Source filename when possible.
     
     Context:
     {context_text}
@@ -153,8 +164,6 @@ async def ask_agent(request: QueryRequest):
     Question: 
     {query}
     """
-    
-    print(f"Asking AI... Sources included: {sources}")
     
     # 3. Call API
     answer = query_huggingface_router(prompt)
