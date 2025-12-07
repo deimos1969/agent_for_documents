@@ -9,9 +9,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = FastAPI()
 
 # --- CONFIGURATION ---
-HF_MODEL_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+# UPDATED URL: Changed from 'api-inference' to 'router'
+HF_MODEL_URL = "https://router.huggingface.co/models/google/flan-t5-large"
 
-# SECURE FIX: Get the key from the environment, do NOT hardcode it.
+# Securely get key from Render Environment
 HF_API_KEY = os.environ.get("HF_API_KEY")
 
 DATA_FOLDER = "knowledge_base"
@@ -68,7 +69,7 @@ def query_huggingface_api(payload):
 # --- ROUTES ---
 @app.get("/")
 def health_check():
-    return {"status": "Agent is running", "mode": "HF API (Cloud Inference)"}
+    return {"status": "Agent is running", "mode": "HF API (Router)"}
 
 class QueryRequest(BaseModel):
     question: str
