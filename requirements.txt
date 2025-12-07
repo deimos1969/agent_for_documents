@@ -1,0 +1,17 @@
+# Web Framework
+fastapi
+uvicorn
+
+# Vector Search & NLP
+sentence-transformers
+faiss-cpu
+
+# Hugging Face Transformers
+transformers
+# We need 'sentencepiece' for T5 tokenizers
+sentencepiece 
+
+# PYTORCH (CPU OPTIMIZED)
+# This specific syntax tells pip to look for the CPU version first
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
