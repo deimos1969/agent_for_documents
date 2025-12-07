@@ -14,8 +14,7 @@ HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_MODEL_ID = "meta-llama/Meta-Llama-3-8B-Instruct"
 HF_API_KEY = os.environ.get("HF_API_KEY")
 
-# ✅ FIX: Use absolute paths. 
-# This ensures Render finds the folder regardless of where the script runs from.
+# ✅ ABSOLUTE PATH SETUP
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FOLDER = os.path.join(BASE_DIR, "knowledge_base")
 
@@ -28,7 +27,6 @@ doc_filenames = []
 def load_knowledge_base():
     global vectorizer, tfidf_matrix, documents, doc_filenames
     
-    # ✅ DEBUG LOGGING: This will show up in your Render dashboard logs
     print(f"--- LOADING KNOWLEDGE BASE ---")
     print(f"Base Directory: {BASE_DIR}")
     print(f"Target Data Folder: {DATA_FOLDER}")
@@ -37,9 +35,7 @@ def load_knowledge_base():
     doc_filenames = []
     
     if os.path.exists(DATA_FOLDER):
-        # List all files in the directory to verify existence
         print(f"Files found in folder: {os.listdir(DATA_FOLDER)}")
-        
         file_paths = glob.glob(os.path.join(DATA_FOLDER, "*.txt"))
         for file_path in file_paths:
             try:
@@ -56,16 +52,15 @@ def load_knowledge_base():
     
     if not documents:
         print("⚠️ No documents found. Initializing empty state.")
-        documents = ["No specific data available."]
-        doc_filenames = ["none"]
-
-    print("Building Search Index...")
-    try:
-        vectorizer = TfidfVectorizer(stop_words='english')
-        tfidf_matrix = vectorizer.fit_transform(documents)
-        print("--- ✅ KNOWLEDGE BASE READY ---")
-    except ValueError:
-        print("--- ⚠️ KNOWLEDGE BASE EMPTY (Vectorizer failed) ---")
+    else:
+        print("Building Search Index...")
+        try:
+            # We keep stop_words='english' for better search on specific terms
+            vectorizer = TfidfVectorizer(stop_words='english')
+            tfidf_matrix = vectorizer.fit_transform(documents)
+            print("--- ✅ KNOWLEDGE BASE READY ---")
+        except ValueError:
+            print("--- ⚠️ KNOWLEDGE BASE ERROR (Vectorizer failed) ---")
 
 # Initialize on startup
 load_knowledge_base()
@@ -97,7 +92,6 @@ def query_huggingface_router(prompt):
             return f"API Error {response.status_code}: {response.text}"
 
         result = response.json()
-        
         if "choices" in result and len(result["choices"]) > 0:
             return result["choices"][0]["message"]["content"]
         else:
@@ -117,32 +111,41 @@ class QueryRequest(BaseModel):
 @app.post("/ask")
 async def ask_agent(request: QueryRequest):
     query = request.question
-    
-    # 1. Retrieve Context
-    context_text = "No context found."
+    context_text = ""
     sources = []
     
-    if vectorizer and tfidf_matrix is not None:
+    # 1. Retrieve Context
+    if vectorizer and tfidf_matrix is not None and documents:
         try:
             query_vec = vectorizer.transform([query])
             similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
             related_docs_indices = similarities.argsort()[:-3:-1]
             
-            retrieved_docs = []
+            # Try to find high-quality matches first
             for i in related_docs_indices:
-                # Only include if there is actual similarity
                 if similarities[i] > 0:
-                    retrieved_docs.append(documents[i])
+                    context_text += documents[i] + "\n\n"
                     sources.append(doc_filenames[i])
             
-            if retrieved_docs:
-                context_text = "\n\n".join(retrieved_docs)
+            # --- FALLBACK MECHANISM (Solution 2) ---
+            # If the search returned NOTHING (e.g., query was "Summarize this"),
+            # but we actually have documents, force feed them to the AI.
+            if not context_text and documents:
+                print(f"⚠️ Search score was 0. Fallback: Sending all {len(documents)} docs to context.")
+                context_text = "\n\n".join(documents)
+                sources = doc_filenames
+                
         except Exception as e:
             print(f"Retrieval error: {e}")
+
+    # Handle case where still no context exists (e.g. no files loaded at all)
+    if not context_text:
+        context_text = "No documents found in knowledge base."
 
     # 2. Construct Prompt
     prompt = f"""
     You are a helpful assistant. Answer the question based ONLY on the context below.
+    If the context is empty, say you don't know.
     
     Context:
     {context_text}
@@ -151,7 +154,7 @@ async def ask_agent(request: QueryRequest):
     {query}
     """
     
-    print(f"Asking AI ({HF_MODEL_ID})... Sources: {sources}")
+    print(f"Asking AI... Sources included: {sources}")
     
     # 3. Call API
     answer = query_huggingface_router(prompt)
