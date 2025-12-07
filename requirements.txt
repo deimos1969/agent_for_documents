@@ -7,11 +7,11 @@ sentence-transformers
 faiss-cpu
 
 # Hugging Face Transformers
-transformers
-# We need 'sentencepiece' for T5 tokenizers
-sentencepiece 
+# The [sentencepiece] extra ensures all tokenizer dependencies are installed
+transformers[sentencepiece]
+sentencepiece
+protobuf
 
 # PYTORCH (CPU OPTIMIZED)
-# This specific syntax tells pip to look for the CPU version first
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
