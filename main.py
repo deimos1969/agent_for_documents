@@ -2,7 +2,7 @@ import os
 import glob
 import requests
 import json
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -10,12 +10,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = FastAPI()
 
 # --- CONFIGURATION ---
-# ✅ UPDATED: Points to the new Router API
-HF_MODEL_URL = "https://router.huggingface.co/hf-inference/models/google/flan-t5-large"
+# ✅ NEW URL: The universal "Chat Completions" endpoint for the Router
+HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
 
-# Securely get key from Render Environment
+# ✅ NEW MODEL: 'flan-t5' is gone. We use SmolLM2 (fast, free, supported).
+# Other options: "meta-llama/Llama-3.2-3B-Instruct" (if you have access) or "mistralai/Mistral-7B-Instruct-v0.3"
+HF_MODEL_ID = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+
 HF_API_KEY = os.environ.get("HF_API_KEY")
-
 DATA_FOLDER = "knowledge_base"
 
 # --- GLOBAL VARIABLES ---
@@ -25,16 +27,11 @@ documents = []
 doc_filenames = []
 
 def load_knowledge_base():
-    """
-    Loads text files and builds a light search index.
-    """
     global vectorizer, tfidf_matrix, documents, doc_filenames
-    
     print(f"Reading '{DATA_FOLDER}'...")
     documents = []
     doc_filenames = []
     
-    # Check if folder exists
     if os.path.exists(DATA_FOLDER):
         file_paths = glob.glob(os.path.join(DATA_FOLDER, "*.txt"))
         for file_path in file_paths:
@@ -48,50 +45,61 @@ def load_knowledge_base():
                 print(f"Skipping file {file_path}: {e}")
     
     if not documents:
-        print("Warning: No documents found. Creating dummy data.")
         documents = ["No specific data available."]
         doc_filenames = ["none"]
 
-    # Build Search Index (TF-IDF)
     print("Building Search Index...")
     try:
         vectorizer = TfidfVectorizer(stop_words='english')
         tfidf_matrix = vectorizer.fit_transform(documents)
         print("--- ✅ KNOWLEDGE BASE READY ---")
     except ValueError:
-        print("--- ⚠️ KNOWLEDGE BASE EMPTY (No valid words found) ---")
+        print("--- ⚠️ KNOWLEDGE BASE EMPTY ---")
 
-# Load data on startup
 load_knowledge_base()
 
-# --- API HELPER ---
-def query_huggingface_api(payload):
+# --- API HELPER (Updated for Router) ---
+def query_huggingface_router(prompt):
     if not HF_API_KEY:
-        return {"error": "HF_API_KEY is missing. Please set it in Render Environment Variables."}
+        return "Error: HF_API_KEY is missing."
 
-    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    headers = {
+        "Authorization": f"Bearer {HF_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    # ✅ NEW PAYLOAD FORMAT: OpenAI-compatible "messages"
+    payload = {
+        "model": HF_MODEL_ID,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 500,
+        "temperature": 0.1
+    }
     
     try:
-        response = requests.post(HF_MODEL_URL, headers=headers, json=payload)
+        response = requests.post(HF_ROUTER_URL, headers=headers, json=payload)
         
-        # DEBUG: Print exact error if it fails
         if response.status_code != 200:
-            print(f"⚠️ API Error {response.status_code}: {response.text}")
+            print(f"⚠️ Router Error {response.status_code}: {response.text}")
+            return f"API Error {response.status_code}: {response.text}"
 
-        return response.json()
+        result = response.json()
+        
+        # Parse OpenAI-style response
+        if "choices" in result and len(result["choices"]) > 0:
+            return result["choices"][0]["message"]["content"]
+        else:
+            return f"Unexpected format: {result}"
             
-    except json.JSONDecodeError:
-        return {
-            "error": f"API returned invalid JSON. Status: {response.status_code}", 
-            "raw_content": response.text
-        }
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Network Request Failed: {str(e)}"}
+    except Exception as e:
+        return f"Connection Error: {str(e)}"
 
 # --- ROUTES ---
 @app.get("/")
 def health_check():
-    return {"status": "Agent is running", "mode": "HF Router API"}
+    return {"status": "Agent is running", "model": HF_MODEL_ID}
 
 class QueryRequest(BaseModel):
     question: str
@@ -100,7 +108,7 @@ class QueryRequest(BaseModel):
 async def ask_agent(request: QueryRequest):
     query = request.question
     
-    # Step 1: Retrieve relevant context locally
+    # 1. Retrieve Context
     context_text = "No context found."
     sources = []
     
@@ -118,34 +126,24 @@ async def ask_agent(request: QueryRequest):
             
             if retrieved_docs:
                 context_text = "\n\n".join(retrieved_docs)
-        except Exception as e:
-            print(f"Retrieval Error: {e}")
+        except Exception:
+            pass
 
-    # Step 2: Send to Hugging Face API
-    # Note: 'flan-t5' is a text-2-text model, so we format the input as a prompt.
-    input_text = f"Answer the question based on the context.\nContext: {context_text}\nQuestion: {query}"
+    # 2. Construct Prompt (Chat Style)
+    prompt = f"""
+    You are a helpful assistant. Answer the question based ONLY on the context below.
     
-    print(f"Asking AI... (Context length: {len(context_text)})")
+    Context:
+    {context_text}
     
-    api_response = query_huggingface_api({
-        "inputs": input_text,
-        "parameters": {
-            "max_length": 150, 
-            "temperature": 0.1 
-        }
-    })
+    Question: 
+    {query}
+    """
     
-    # Step 3: Parse Answer
-    answer = "Error generating answer."
+    print(f"Asking AI ({HF_MODEL_ID})...")
     
-    if isinstance(api_response, list) and len(api_response) > 0:
-        if "generated_text" in api_response[0]:
-            answer = api_response[0]["generated_text"]
-    elif isinstance(api_response, dict):
-        if "error" in api_response:
-             answer = f"API Error: {api_response['error']}"
-        elif "generated_text" in api_response:
-            answer = api_response["generated_text"]
+    # 3. Call API
+    answer = query_huggingface_router(prompt)
     
     return {
         "question": query,
