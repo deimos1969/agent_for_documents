@@ -1,0 +1,66 @@
+Document: Comprehensive Guide to the Swiss Pension System (4 Pillars)
+Author: Aga
+Date: October 23, 2025
+Region: Switzerland
+Topics: Pension System, AHV/AVS (Pillar 1), BVG/LPP (Pillar 2), Pillar 3a/3b, Personal Investments (Pillar 4), Tax Optimization, Withdrawal Strategies.
+
+---
+
+1. Executive Summary: The 4-Pillar Concept
+The Swiss pension system is officially composed of three pillars, but a strategic approach requires a "Fourth Pillar" (Personal Independence).
+* Pillar 1 (State): Solidarity-based, guarantees basic existence.
+* Pillar 2 (Occupational): Capital-based, maintains standard of living (target ~60% of final income).
+* Pillar 3 (Private): Voluntary, tax-advantaged (3a) or flexible (3b).
+* Pillar 4 (Personal): Independent liquid assets (ETFs, savings) for resilience.
+
+2. Pillar 1: AHV/AVS (State Pension)
+* Function: Mandatory state pension based on solidarity. Current workers fund current retirees (Pay-as-you-go).
+* Payout Structure (2025):
+  - Minimum for singles: CHF 1,260 / month.
+  - Maximum for singles: CHF 2,520 / month.
+  - Maximum for married couples: CHF 3,780 / month (capped at 150% of the max single pension).
+* Mechanism: Contributions do not go into a personal account but into a national pot. Payouts are adjusted periodically for inflation and wages.
+
+3. Pillar 2: BVG/LPP (Occupational Pension)
+* Function: Occupational pension funded by both employer and employee. Assets are capitalized (saved and invested) in the employee's name.
+* Structure:
+  - Mandatory Portion: Insures salary up to a specific ceiling (CHF 88,200). Protected by the Guarantee Fund.
+  - Extra-Mandatory Portion: Insures salary above the ceiling. Rules vary by employer.
+* Safety Net: The "Guarantee Fund" (Sicherheitsfonds BVG / Fonds de garantie LPP) protects the mandatory benefits if a pension fund becomes insolvent.
+* Risks: Declining conversion rates (the rate at which capital is turned into a pension) and inflation may reduce future purchasing power.
+
+4. Pillar 3: Voluntary Private Provision
+* Pillar 3a (Restricted):
+  - Tax Benefit: Contributions are tax-deductible from taxable income.
+  - 2025 Limit (Employees): CHF 7,258 per year.
+  - 2025 Limit (Self-employed without Pillar 2): 20% of income, max CHF 36,288.
+  - Constraints: Funds are locked until retirement (or specific exceptions: home ownership, self-employment, leaving Switzerland).
+  - Investment: Can be invested in funds/ETFs for compound growth.
+* Pillar 3b (Unrestricted):
+  - Tax Benefit: None (contributions are not deductible).
+  - Constraints: None (fully liquid).
+  - Use Case: Life insurance coverage or beneficiary designation outside of inheritance law. For pure wealth accumulation, a standard brokerage account is often superior due to lower fees.
+
+5. Pillar 4: Personal Financial Independence
+* Definition: Private savings and investments held outside the pension system (e.g., Brokerage accounts).
+* Key Advantage: Liquidity. Funds are accessible at any age (e.g., for a career break or early retirement) without legal restrictions.
+* Implementation Case Study:
+  - Platform: DEGIRO (cited for low fees, no custody fees, CHF currency handling).
+  - Strategy: Low-fee ETFs held for the long term.
+
+6. Withdrawal Strategy
+* The Tax Progression Trap: Lump-sum withdrawals are taxed progressively. Withdrawing a large sum in a single year results in a higher tax rate than withdrawing smaller sums over multiple years.
+* Optimization Strategy:
+  - Stagger withdrawals: If you have multiple Pillar 3a accounts, close them in different years.
+  - Split Pillar 2: If possible, take part as a pension (taxed as income) and part as capital (taxed as lump sum) to manage tax brackets.
+* Geography: Tax rates vary significantly by canton (e.g., Schwyz vs. Zurich).
+
+7. Frequently Asked Questions (FAQ) Summary
+* Buy-in vs. ETF:
+  - Short Horizon (<5-10 years): Pillar 2 buy-ins are superior due to immediate tax deduction and lower volatility.
+  - Long Horizon (>10-15 years): ETFs/Pillar 3a often outperform due to higher equity exposure and compounding.
+* Ownership of Pillar 2: The capital belongs to the individual but is legally "locked" for retirement purposes. The mandatory portion is state-guaranteed.
+* Pension (Annuity) vs. Lump Sum:
+  - Pension: Lifetime income, no market risk, but no capital for heirs.
+  - Lump Sum: Full control, capital can be bequeathed, but individual bears longevity and market risk.
+  - Common Mistake: Waiting too long (age 50+) to review the pension statement, missing opportunities for tax-optimized buy-ins.

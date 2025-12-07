@@ -1,0 +1,62 @@
+Document: Smart Mortgage Loop Strategy (Pillar 2 Buy-ins)
+Author: Aga
+Date: October 24, 2025
+Region: Switzerland
+Topics: Mortgage Repayment, Pillar 2 (Pension Fund), Tax Optimization, WEF (Home Ownership Encouragement), Tax Deduction.
+
+---
+
+1. Executive Summary
+The "Smart Mortgage Loop" is a tax arbitrage strategy for Swiss homeowners. Instead of using after-tax cash to repay a mortgage directly, the homeowner funnels the money through their 2nd Pillar (Pension Fund) first. This generates a tax deduction at a high marginal rate (e.g., ~35%) while the eventual withdrawal for the home is taxed at a lower capital withdrawal rate (e.g., ~7%). The net result is an effective discount on the mortgage principal of approximately 20–28%.
+
+2. The Strategy Workflow
+To execute this strategy, the homeowner follows this specific sequence:
+1. Buy-In: Voluntarily pay extra capital into the Occupational Pension Fund (Pillar 2).
+2. Deduction: Claim this buy-in as a deduction on that year's tax return, saving income tax at the marginal rate.
+3. Holding Period: Wait for the mandatory 3-year blocking period.
+4. Withdrawal (WEF): Withdraw the capital under the Home Ownership Encouragement Scheme (WEF).
+5. Repayment: Use the withdrawn funds to amortize the mortgage.
+
+3. Case Study: The Mathematical Logic
+The following example demonstrates the arbitrage effect based on a high-income earner scenario.
+
+Assumptions:
+* Capital available: CHF 100,000
+* Marginal Tax Rate (Federal/Canton/Commune): 35%
+* Capital Withdrawal Tax Rate (WEF): ~7% (Varies by canton)
+
+Calculation:
+A. Direct Repayment (Standard Method):
+   - You use CHF 100,000 after-tax cash.
+   - Mortgage reduces by CHF 100,000.
+   - Net Cost: CHF 100,000.
+
+B. The "Smart Loop" Method:
+   - Step 1 (Buy-in): You pay CHF 100,000 into Pillar 2.
+   - Step 2 (Tax Refund): You save CHF 35,000 in income taxes (35% of 100k).
+   - Step 3 (Withdrawal): You withdraw CHF 100,000 later.
+   - Step 4 (Withdrawal Tax): You pay CHF 7,000 in separate capital tax.
+   - Net Benefit Calculation: +35,000 (Tax Saved) - 7,000 (Tax Paid) = CHF 28,000 Net Gain.
+
+Result:
+You have repaid CHF 100,000 of debt, but the net cost to you was effectively CHF 72,000.
+(The home effectively cost ~28% less).
+
+4. Rules and Regulations (Constraints)
+Warning: Strict adherence to these rules is required to avoid tax penalties.
+
+* The 3-Year Blocking Rule: Capital bought into the pension fund cannot be withdrawn as a lump sum (including for WEF) for a period of 3 years. This restriction is enforced by the tax authorities.
+* Separate Taxation: WEF withdrawals are taxed at a special reduced rate, separate from standard income.
+* Repayment upon Sale: If the property is sold, the withdrawn pension capital must usually be repaid to the pension fund.
+* Tax Reclamation: If you repay the WEF withdrawal to the pension fund (e.g., after selling), you can apply to the tax office (Steueramt) to have the original withdrawal tax refunded. This application must usually be made within 3 years of the repayment.
+
+5. Target Audience
+This strategy is most effective for:
+* Homeowners in high tax brackets (where the spread between Income Tax and Withdrawal Tax is widest).
+* Owners who plan to stay in the property long-term.
+* Owners with "Buy-in Potential" (Einkaufspotenzial) in their pension fund.
+
+6. References
+* Strategy Name: Smart Mortgage Loop.
+* Legal Mechanism: WEF (Wohneigentumsförderung / Home Ownership Encouragement).
+* Related Content: "Using Your Pension Fund to Buy a Home (WEF Withdrawal Explained)".

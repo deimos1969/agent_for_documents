@@ -1,0 +1,60 @@
+Document: Swiss Health Insurance Guide for Expats (FAQ)
+Author: Aga
+Date: October 30, 2025
+Region: Switzerland
+Topics: Expat Guide, Basic Insurance (Grundversicherung), Legal Requirements, International Coverage, Cost Optimization.
+
+---
+
+1. Legal Requirement: Mandatory Coverage
+* Rule: Every resident in Switzerland must take out basic health insurance (Grundversicherung / LAMal / KVG) within three months of registering.
+* Scope: This applies to everyone, including newborns. There are no employer-sponsored health plans; individuals must purchase their own policies.
+* Source Authority: Health insurance requirement for persons resident in Switzerland (ch.ch).
+
+2. Validity of Foreign Insurance
+* General Rule: Foreign health insurance is generally not accepted as a substitute for Swiss mandatory insurance.
+* Exception: EU/EFTA cross-border workers ("Grenzgänger") may be eligible to keep foreign coverage, provided they file a formal exemption.
+* Source Authority: Health insurance for Cross-border commuters.
+
+3. Basic vs. Supplementary Insurance
+* Basic Insurance (Grundversicherung): Mandatory. Coverage is identical across all insurers by federal law. Includes general doctor visits, hospital stays in the canton of residence, maternity care, and emergencies.
+* Supplementary Insurance (Zusatzversicherung): Optional. Covers "comfort" and non-essential services such as private hospital rooms, free choice of doctor, alternative medicine, dental, and vision.
+* Recommendation: Supplementary insurance is cost-efficient for specific needs (e.g., gym memberships, maternity comfort) but is not required for legal compliance or essential health.
+
+4. Determinants of Premium Costs
+Premiums are not flat-rate; they vary based on:
+1. Geography: Canton and Commune of residence (e.g., Zug is cheaper than Zurich).
+2. Age: Different brackets for children, young adults, and adults.
+3. Model: The chosen insurance model (Standard vs. Telmed/HMO).
+* Note: For Basic Insurance, premiums are NOT affected by medical history.
+
+5. Franchise (Deductible) Selection Strategy
+Residents must choose a Franchise between CHF 300 and CHF 2,500.
+* High Franchise (CHF 2,500): Results in lower monthly premiums. Best for healthy individuals who rarely visit doctors.
+* Low Franchise (CHF 3,000): Results in higher monthly premiums. Best for children, people with chronic conditions, or those requiring frequent medical care.
+
+6. Changing Insurers (Switching)
+* Frequency: Residents can switch basic insurance providers once a year.
+* Deadline: The cancellation letter must reach the current insurer by November 30.
+* Effect Date: The new policy begins automatically on January 1.
+* Process: The new insurer typically handles the transition after sign-up.
+
+7. International Coverage (Travel)
+* EU/EFTA: Swiss insurance covers emergency treatment via the European Health Insurance Card (EHIC).
+* Rest of World: Coverage is limited to emergencies only.
+* Reimbursement Cap: Non-EU emergency costs are usually covered up to double the cost of the same treatment in Switzerland.
+* Recommendation: For travel to high-cost countries (e.g., USA), travel insurance or supplementary global cover is recommended.
+
+8. Family Coverage Structure
+* Individual Policies: There are no "family bundles." Each family member (partner, children) has an individual policy.
+* Optimization: Family members can have different insurers and models. (e.g., One partner on Telmed, the other on Standard; children on low deductible).
+
+9. Cost Optimization Tactics
+To reduce premiums while maintaining mandatory coverage:
+1. Choose an Alternative Model: HMO or Telmed models are cheaper than the Standard model but require a referral or call before visiting a specialist.
+2. Optimize Franchise: Choose CHF 2,500 if healthy.
+3. Exclude Accident Coverage: If employed for more than 8 hours per week, the employer covers non-occupational accidents (NBU). The employee can drop accident coverage from their health insurance.
+4. Annual Comparison: Prices change yearly; compare premiums annually on platforms like comparis.ch.
+
+10. System Overview
+The Swiss healthcare system is decentralized and market-driven. While it ensures universal coverage and high standards of care, it relies on competition between private insurers rather than a single state-run fund. This results in complex pricing structures that reward active management by the insured.

@@ -1,0 +1,54 @@
+Document: Pillar 3a Reform 2025 (Catch-up Contributions)
+Author: Aga
+Date: October 22, 2025
+Region: Switzerland
+Topics: Pillar 3a, Pension Reform, Retroactive Contributions (Buy-ins), Tax Optimization, Marginal Tax Rate.
+
+---
+
+1. Executive Summary
+The 2025 Reform introduces the ability to make retroactive "catch-up" contributions to Pillar 3a starting in the 2026 tax year.
+* Key Change: Taxpayers can now fill contribution gaps from previous years (starting from 2025).
+* Beneficiaries: Individuals with fluctuating income (contractors, parents, entrepreneurs) who can optimize tax deductions by shifting contributions to high-income years.
+* Constraint: Gaps prior to January 1, 2025, cannot be filled.
+
+2. Timeline of Implementation
+* January 1, 2025: The reform becomes legally effective. This is the first year for which a "gap" can be recorded.
+* January 1, 2026: The first year in which a retroactive buy-in can actually be made (to cover the gap from 2025).
+
+3. Eligibility Rules (The "Must-Haves")
+To make a retroactive buy-in, you must meet ALL the following criteria:
+1. Past Status: You must have been working and paying AHV in the year the gap occurred.
+2. Current Status: You must be working and paying AHV in the year you make the buy-in.
+3. Priority Rule: You must have already paid the FULL regular 3a contribution for the current year before making a buy-in.
+4. Withdrawal Status: You must not have started withdrawing 3a old-age benefits.
+* Note: A WEF (Home Ownership) withdrawal does NOT block future buy-ins.
+
+4. Financial Limits and Caps
+* Look-back Period: You can buy back up to 10 years of missed contributions.
+* Start Date: Only gaps occurring from 2025 onwards are eligible.
+* Annual Buy-in Cap: The "Small Pillar 3a Limit" (8% of the upper BVG threshold).
+  - For 2025/2026 (approx): CHF 7,258 (Employees with pension fund) / CHF 36,288 (Self-employed without pension fund).
+* Total Annual Deduction: You can combine the Regular Contribution + One Buy-in Contribution in a single tax year.
+
+5. Strategic Case Study: Tax Optimization
+Scenario: A taxpayer moves from a low-income year to a high-income year.
+* Year A (Low Income): Marginal tax rate 15%.
+  - Action: Skip Pillar 3a contribution.
+  - Missed Deduction Value: CHF 1,050 (CHF 7,000 * 15%).
+* Year B (High Income): Marginal tax rate 30%.
+  - Action: Pay regular 3a + Buy-in for Year A.
+  - Total Payment: CHF 14,000.
+  - Total Tax Saving: CHF 4,200 (CHF 14,000 * 30%).
+* Result: By delaying the contribution to the high-tax year, the taxpayer doubled the tax benefit (saving CHF 2,100 extra).
+
+6. Target Audience (Who Benefits?)
+* High Benefit:
+  - Contractors/Entrepreneurs with volatile income.
+  - Parents taking temporary leave (creating low-income years).
+  - Employees with variable bonuses.
+* Low Benefit:
+  - Employees with stable, flat income trajectories. For this group, immediate compounding via regular contributions is mathematically superior to delaying.
+
+7. Legal Reference
+* Source: BVV 3 / OPP 3, Art. 7a (Effective Jan 1, 2025).
