@@ -1,17 +1,15 @@
-# Web Framework
 fastapi
 uvicorn
+numpy<2.0.0
 
-# Vector Search & NLP
-sentence-transformers
-faiss-cpu
+# Lightweight Machine Learning
+scikit-learn
 
-# Hugging Face Transformers
-# The [sentencepiece] extra ensures all tokenizer dependencies are installed
+# The Generator Model
 transformers[sentencepiece]
 sentencepiece
 protobuf
 
-# PYTORCH (CPU OPTIMIZED)
+# PyTorch CPU
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
