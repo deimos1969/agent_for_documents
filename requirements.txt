@@ -5,3 +5,7 @@ scikit-learn
 numpy
 # For talking to the Hugging Face API
 requests
+
+langchain>=0.1.0
+langchain-community>=0.0.10
+huggingface-hub>=0.20.0
